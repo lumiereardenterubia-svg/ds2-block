@@ -359,7 +359,7 @@ function startGame(){
   running=true;
   paused=false;
 }
-canvas.addEventListener('pointerdown', (e)=>{
+canvas.addEventListener('pointerdown', ()=>startGame(), {passive:true});
   // start on first interaction anywhere on canvas
   if(overlay.style.display!=="none"){ startGame(); }
 });
@@ -503,7 +503,7 @@ function startGame(){
   running=true;
   paused=false;
 }
-canvas.addEventListener('pointerdown', (e)=>{
+canvas.addEventListener('pointerdown', ()=>startGame(), {passive:true});
   // start on first interaction anywhere on canvas
   if(overlay.style.display!=="none"){ startGame(); }
 });
