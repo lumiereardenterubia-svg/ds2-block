@@ -130,8 +130,8 @@ const pillAudio = document.getElementById('pillAudio');
 function ensureAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  master = audioCtx.createGain(); master.gain.value = 0.7; master.connect(audioCtx.destination);
-  bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.0; bgmGain.connect(master);
+  master = audioCtx.createGain(); master.gain.value = 1.2; master.connect(audioCtx.destination);
+  bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.7; bgmGain.connect(master);
   sfxGain = audioCtx.createGain(); sfxGain.gain.value = 0.9; sfxGain.connect(master);
 }
 function setAudioPill(){ pillAudio.textContent = `BGM: ${bgmOn?'ON':'OFF'} / SFX: ${sfxOn?'ON':'OFF'}`; }
@@ -568,3 +568,4 @@ step();
 </script>
 </body>
 </html>
+
