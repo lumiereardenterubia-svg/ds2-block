@@ -45,6 +45,15 @@ canvas{display:block;width:100%;
 .glitch{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:7;
   background:linear-gradient(90deg, rgba(255,81,81,.0), rgba(255,81,81,.10), rgba(255,81,81,.0));mix-blend-mode:screen}
 .footer{padding:10px 16px;color:var(--muted);font-size:12px;border-top:1px solid rgba(255,255,255,.08)}
+
+<style>
+/* Public polish */
+.hud .box{transition:transform .15s ease, box-shadow .15s ease}
+.hud .box:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.flashDS2{animation:flicker 1.2s infinite}
+@keyframes flicker{0%,100%{opacity:.15} 50%{opacity:.9}}
+</style>
+
 </style>
 </head>
 <body>
@@ -53,7 +62,7 @@ canvas{display:block;width:100%;
     <header>
       <div>
         <h1>DARK SERAPH 2 / Break the Seal</h1>
-        <div class="small">BGMはクリック後にON推奨（ブラウザ制限）｜Desira覚醒：中央の「DS2」点滅中に <b>D→S→2</b> → 赤フラッシュ＋BGM高速パルス</div>
+        <div class="small">BGMはクリック後にON推奨（ブラウザ制限）｜隠しギミックあり</div>
       </div>
       <div class="btns">
         <span class="pill" id="pillBgm">BGM: OFF</span>
