@@ -5,112 +5,709 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DARK SERAPH 2 / Break the Seal – Block Breaker</title>
 <style>
-html,body{margin:0;background:#070812;color:#e9ecff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
-.wrap{display:flex;justify-content:center;padding:20px}
-.game{width:min(900px,100%);background:#0b0d16;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #222}
-header h1{font-size:16px;margin:0}
-.btns button{margin-left:6px}
-button{background:#131a2d;color:#fff;border:1px solid #2c3456;border-radius:10px;padding:8px 12px;cursor:pointer}
-canvas{display:block;width:100%;background:#05060b}
-.overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;justify-content:center;align-items:center}
-.modal{background:#0f1321;border-radius:14px;padding:16px;max-width:720px;width:92%}
+:root{
+  --bg:#070812;--panel:#0b0d16;--line:rgba(255,255,255,.08);
+  --btn:#131a2d;--btnb:#2c3456;--txt:#e9ecff;
+}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
+.wrap{display:flex;justify-content:center;padding:18px}
+.game{width:min(1040px,100%);background:var(--panel);border-radius:16px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.6)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0;letter-spacing:.3px}
+header .sub{font-size:12px;opacity:.75;margin-left:10px}
+.btns button{margin-left:8px}
+button{background:var(--btn);color:#fff;border:1px solid var(--btnb);border-radius:12px;
+  padding:8px 12px;cursor:pointer}
+button:active{transform:translateY(1px)}
+.pill{display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.06);
+  border:1px solid var(--line); padding:6px 10px;border-radius:999px;font-size:12px;opacity:.92}
+.hud{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px;font-size:12px;border-bottom:1px solid var(--line)}
+.hud .box{min-width:130px;background:rgba(255,255,255,.04);border:1px solid var(--line);
+  border-radius:14px;padding:10px 12px}
+.hud .k{opacity:.75;font-size:11px}
+.hud .v{font-weight:700;font-size:15px;margin-top:2px}
+.stage{position:relative}
+canvas{display:block;width:100%;
+  background:radial-gradient(700px 420px at 50% 30%, #1a1230 0%, #0a0a12 60%, #05060b 100%);
+  touch-action:none}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.62);display:flex;justify-content:center;align-items:center;z-index:10}
+.modal{background:#0f1321;border-radius:16px;padding:16px 16px 14px;max-width:900px;width:92%;
+  border:1px solid rgba(255,255,255,.10); box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.modal h2{margin:0 0 8px 0;font-size:18px}
+.modal p{margin:0 0 10px 0;opacity:.9;line-height:1.45}
 .chars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.char{background:#131a2d;border-radius:12px;padding:10px;cursor:pointer;text-align:center}
+.char{background:#131a2d;border-radius:14px;padding:12px;cursor:pointer;text-align:left;border:1px solid rgba(255,255,255,.10)}
 .char:hover{background:#1b2540}
-.hud{display:flex;gap:10px;padding:10px;font-size:12px}
+.char .name{font-weight:800;margin-bottom:4px}
+.char .desc{font-size:12px;opacity:.85;line-height:1.35}
+.tipbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.tip{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px;opacity:.9}
+.small{font-size:12px;opacity:.78}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="game">
-<header>
-<h1>DARK SERAPH 2 / Break the Seal</h1>
-<div class="btns">
-<button onclick="restart()">Restart</button>
-</div>
-</header>
+  <div class="game">
+    <header>
+      <div>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <h1>DARK SERAPH 2 / Break the Seal</h1>
+          <span class="sub">Block Breaker (GitHub Pages / WordPress friendly)</span>
+        </div>
+        <div class="small" id="hint">キャラを選んで開始。P=Pause / R=Restart / M=SFX / B=BGM</div>
+      </div>
+      <div class="btns">
+        <span class="pill" id="pillAudio">BGM: OFF / SFX: ON</span>
+        <button onclick="togglePause()">Pause</button>
+        <button onclick="restart(false)">Restart</button>
+      </div>
+    </header>
 
-<div class="hud">
-<div>CHAR: <span id="hudChar">—</span></div>
-<div>SCORE: <span id="hudScore">0</span></div>
-</div>
+    <div class="hud">
+      <div class="box"><div class="k">CHAR</div><div class="v" id="hudChar">—</div></div>
+      <div class="box"><div class="k">SCORE</div><div class="v" id="hudScore">0</div></div>
+      <div class="box"><div class="k">LIFE</div><div class="v" id="hudLife">3</div></div>
+      <div class="box"><div class="k">COMBO</div><div class="v" id="hudCombo">x1</div></div>
+      <div class="box"><div class="k">MODE</div><div class="v" id="hudMode">NORMAL</div></div>
+      <div class="box"><div class="k">BOSS HP</div><div class="v" id="hudBoss">—</div></div>
+    </div>
 
-<div style="position:relative">
-<canvas id="game" width="900" height="500"></canvas>
+    <div class="stage">
+      <canvas id="game" width="1040" height="600"></canvas>
 
-<div class="overlay" id="overlay">
-<div class="modal">
-<p>キャラを選んで開始</p>
-<div class="chars">
-<div class="char" onclick="pick('ARIA')">Aria</div>
-<div class="char" onclick="pick('DESIRA')">Desira</div>
-<div class="char" onclick="pick('MIREA')">Mirea</div>
-</div>
-</div>
-</div>
-</div>
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h2>キャラを選べ。封印（ブロック）をぶっ壊せ。</h2>
+          <p>※「過激」は派手さ全振りの意味で実装。流血や露骨表現は無し。安心して破壊してOK。</p>
+          <div class="chars">
+            <div class="char" onclick="pick('aria')">
+              <div class="name">Aria（光）</div>
+              <div class="desc">安定：パドル広め。たまに回復（上限5）。<br>“静けさの秩序”を優しく割る。</div>
+            </div>
+            <div class="char" onclick="pick('desira')">
+              <div class="name">Desira（欲）</div>
+              <div class="desc">攻撃：反射のたび速度↑。スコア係数↑。<br>コンボが乗るほど“暴走”する。</div>
+            </div>
+            <div class="char" onclick="pick('mirea')">
+              <div class="name">Mirea（隔離）</div>
+              <div class="desc">妨害：壊したブロックが時々“再封印”。<br>勝てたらちょっと自慢していい。</div>
+            </div>
+          </div>
 
-</div>
+          <div class="tipbar">
+            <div class="tip">🖱️/📱 パドル追従：マウス/タッチ</div>
+            <div class="tip">🔥 COMBOでMODE変化（SEAL→RAGE）</div>
+            <div class="tip">🌀 グリッチ演出は制御付き（画面全面帯は出ない）</div>
+            <div class="tip">👑 最後にボス封印核（BOSS BLOCK）</div>
+          </div>
+          <p class="small" style="margin-top:10px">開始後：P=Pause / R=Restart / M=SFX / B=BGM</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
+/* =========================
+   Audio (WebAudio)
+   ========================= */
+let audioCtx=null, master=null, bgmGain=null, sfxGain=null;
+let bgmOn=false, sfxOn=true;
+let bgmNodes=[];
+const pillAudio = document.getElementById('pillAudio');
+
+function ensureAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  master = audioCtx.createGain(); master.gain.value = 0.7; master.connect(audioCtx.destination);
+  bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.0; bgmGain.connect(master);
+  sfxGain = audioCtx.createGain_setting ? audioCtx.createGain_setting() : audioCtx.createGain();
+  sfxGain.gain.value = 0.9; sfxGain.connect(master);
+}
+
+function setAudioPill(){
+  pillAudio.textContent = `BGM: ${bgmOn?'ON':'OFF'} / SFX: ${sfxOn?'ON':'OFF'}`;
+}
+
+function blip(freq=440, dur=0.06, type='sine', gain=0.2){
+  if(!sfxOn) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(gain, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t); o.stop(t+dur+0.02);
+}
+
+function noiseHit(dur=0.05, gain=0.12){
+  if(!sfxOn) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate*dur, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * Math.exp(-i/(data.length*0.5));
+  const src = audioCtx.createBufferSource(); src.buffer = buffer;
+  const g = audioCtx.createGain(); g.gain.value = gain;
+  src.connect(g); g.connect(sfxGain);
+  src.start(t);
+}
+
+function stopBGM(){
+  if(!audioCtx) return;
+  bgmNodes.forEach(n=>{ try{ n.stop(); }catch(_){} });
+  bgmNodes = [];
+}
+
+function startBGM(){
+  ensureAudio();
+  stopBGM();
+  const t = audioCtx.currentTime;
+  bgmGain.gain.setTargetAtTime(0.12, t, 0.12);
+
+  // simple dark pad + pulse
+  const root = 110; // A2-ish
+  const freqs = [root, root*1.5, root*2]; // power-ish
+  freqs.forEach((f,i)=>{
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = f*(i===1?0.995:1.0);
+    g.gain.value = 0.0;
+    g.gain.setTargetAtTime(0.03/(i+1), t+0.05, 0.2);
+    o.connect(g); g.connect(bgmGain);
+    o.start(t);
+    bgmNodes.push(o);
+  });
+
+  // pulse
+  const lfo = audioCtx.createOscillator();
+  const lfoG = audioCtx.createGain();
+  lfo.type='sine'; lfo.frequency.value = 2.2;
+  lfoG.gain.value = 0.02;
+  lfo.connect(lfoG);
+  // modulate bgmGain
+  lfoG.connect(bgmGain.gain);
+  lfo.start(t);
+  bgmNodes.push(lfo);
+
+  // auto-stop on tab hidden to avoid runaway
+}
+
+function toggleBGM(){
+  ensureAudio();
+  bgmOn = !bgmOn;
+  if(bgmOn){
+    startBGM();
+  }else{
+    stopBGM();
+    bgmGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.08);
+  }
+  setAudioPill();
+}
+
+function toggleSFX(){
+  sfxOn = !sfxOn;
+  setAudioPill();
+}
+
+setAudioPill();
+
+/* =========================
+   Game
+   ========================= */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const hudChar = document.getElementById('hudChar');
 const hudScore = document.getElementById('hudScore');
+const hudLife = document.getElementById('hudLife');
+const hudCombo = document.getElementById('hudCombo');
+const hudMode = document.getElementById('hudMode');
+const hudBoss = document.getElementById('hudBoss');
 
-let running=false;
-let score=0;
-let charName='';
+let W = canvas.width, H = canvas.height;
+let running=false, paused=false;
 
-let paddle={x:450,w:120};
-let ball={x:450,y:250,vx:4,vy:-4};
+let score=0, life=3, combo=1;
+let mode='NORMAL';
+let selectedChar='';
+let bossActive=false, bossHP=0;
 
-function pick(c){
-  charName=c;
-  hudChar.textContent=c;
-  overlay.style.display='none';
-  running=true;
+const paddle = { x: W/2, y: H-46, w: 190, h: 12, targetX: W/2 };
+const ball = { x: W/2, y: H-80, r: 7, vx: 4.2, vy: -4.8 };
+
+const bricks = [];
+const BR = { cols: 13, rows: 9, w: 64, h: 18, gap: 10, top: 90 };
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+function setMode(m){
+  mode=m;
+  hudMode.textContent=m;
 }
 
-function restart(){
-  score=0;
-  hudScore.textContent=0;
-  ball.x=450; ball.y=250;
-  running=!!charName;
+function updateHUD(){
+  hudChar.textContent = selectedChar ? selectedChar.toUpperCase() : '—';
+  hudScore.textContent = String(score);
+  hudLife.textContent = String(life);
+  hudCombo.textContent = 'x'+String(combo);
+  hudBoss.textContent = bossActive ? String(bossHP) : '—';
 }
 
-canvas.addEventListener('mousemove',e=>{
-  const r=canvas.getBoundingClientRect();
-  paddle.x=(e.clientX-r.left)/r.width*canvas.width;
-});
+function resetBall(){
+  ball.x = paddle.x;
+  ball.y = paddle.y - 28;
+  ball.vx = 4.2 * (Math.random()<0.5?-1:1);
+  ball.vy = -4.8;
+}
 
-function step(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function pointerToCanvasX(clientX){
+  const r = canvas.getBoundingClientRect();
+  const x = (clientX - r.left) / r.width * W;
+  return clamp(x, paddle.w/2, W - paddle.w/2);
+}
 
-  ctx.fillStyle='#6ad1ff';
-  ctx.fillRect(paddle.x-paddle.w/2,460,paddle.w,10);
-
-  if(running){
-    ball.x+=ball.vx;
-    ball.y+=ball.vy;
-    if(ball.x<5||ball.x>895) ball.vx*=-1;
-    if(ball.y<5) ball.vy*=-1;
-    if(ball.y>450 && ball.x>paddle.x-paddle.w/2 && ball.x<paddle.x+paddle.w/2){
-      ball.vy*=-1; score+=10; hudScore.textContent=score;
+/* -------- DS2 brick layout --------
+   “Seal” pattern: ring + core gaps + side wings
+   1 = normal brick, 2 = “seal shard” (tough), 3 = “star” (bonus)
+*/
+function makeLayout(){
+  const layout = [];
+  for(let r=0;r<BR.rows;r++){
+    layout[r]=[];
+    for(let c=0;c<BR.cols;c++){
+      layout[r][c]=0;
     }
-    if(ball.y>520){ running=false; overlay.style.display='flex'; }
   }
 
-  ctx.fillStyle='#fff';
+  // Ring area
+  const cx = (BR.cols-1)/2, cy = 3.2;
+  for(let r=0;r<BR.rows;r++){
+    for(let c=0;c<BR.cols;c++){
+      const dx = (c-cx)/6.2;
+      const dy = (r-cy)/3.6;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if(d<1.05 && d>0.60) layout[r][c]=1;
+    }
+  }
+
+  // Core “seal shards”
+  for(let r=2;r<=5;r++){
+    for(let c=5;c<=7;c++){
+      layout[r][c]=2;
+    }
+  }
+
+  // Side wings (left/right)
+  for(let r=1;r<7;r++){
+    layout[r][1]=1;
+    layout[r][BR.cols-2]=1;
+    if(r%2===0){
+      layout[r][0]=1;
+      layout[r][BR.cols-1]=1;
+    }
+  }
+
+  // Sprinkle stars
+  for(let k=0;k<10;k++){
+    const r = (Math.random()*BR.rows)|0;
+    const c = (Math.random()*BR.cols)|0;
+    if(layout[r][c]!==0) layout[r][c]=3;
+  }
+
+  return layout;
+}
+
+function initBricks(){
+  bricks.length = 0;
+  const layout = makeLayout();
+  const totalW = BR.cols*BR.w + (BR.cols-1)*BR.gap;
+  const left = (W-totalW)/2;
+
+  for(let r=0;r<BR.rows;r++){
+    for(let c=0;c<BR.cols;c++){
+      const t = layout[r][c];
+      if(t===0) continue;
+      const x = left + c*(BR.w+BR.gap);
+      const y = BR.top + r*(BR.h+BR.gap);
+      const hp = (t===2)?2:1;
+      const star = (t===3);
+      bricks.push({x,y,w:BR.w,h:BR.h,alive:true,hp,star});
+    }
+  }
+}
+
+function spawnBoss(){
+  bossActive=true;
+  bossHP = 18 + (selectedChar==='desira'?6:0) + (selectedChar==='mirea'?4:0);
+  updateHUD();
+}
+
+function allBricksCleared(){
+  return bricks.every(b=>!b.alive);
+}
+
+function circleRectHit(cx,cy,r, rx,ry,rw,rh){
+  const nx = clamp(cx, rx, rx+rw);
+  const ny = clamp(cy, ry, ry+rh);
+  const dx = cx-nx, dy = cy-ny;
+  return (dx*dx + dy*dy) <= r*r;
+}
+
+// Controlled glitch: only small slices around ball region, intensity capped
+let glitchT=0;
+function pushGlitch(amount){
+  glitchT = Math.min(18, glitchT + amount);
+}
+
+function onBrickBreak(b){
+  let base = b.star ? 25 : 10;
+  if(b.hp>1) base += 8;
+
+  let mult = 1 + Math.min(3, (combo-1)*0.10);
+  if(selectedChar==='desira') mult *= 1.35;
+  score += Math.round(base * mult);
+
+  combo += 1;
+  if(combo >= 18) setMode('RAGE');
+  else if(combo >= 8) setMode('SEAL');
+  else setMode('NORMAL');
+
+  // Aria mercy
+  if(selectedChar==='aria' && Math.random()<0.06){
+    life = Math.min(5, life+1);
+    blip(880,0.06,'triangle',0.14);
+  }
+
+  // Mirea re-seal: revive a random dead brick
+  if(selectedChar==='mirea' && Math.random()<0.18){
+    const dead = bricks.filter(x=>!x.alive);
+    if(dead.length){
+      dead[(Math.random()*dead.length)|0].alive = true;
+      dead[(Math.random()*dead.length)|0].hp = 1;
+      combo = Math.max(1, combo-2);
+      pushGlitch(4);
+      blip(220,0.08,'square',0.12);
+    }
+  }
+
+  updateHUD();
+}
+
+function hitBoss(){
+  if(!bossActive) return;
+  bossHP -= 1;
+  score += 80;
+  pushGlitch(5);
+  noiseHit(0.06,0.14);
+  if(bossHP<=0){
+    bossActive=false;
+    score += 2000;
+    setMode('NORMAL');
+    combo = 1;
+    updateHUD();
+    // win splash
+    paused = true;
+    overlay.style.display='flex';
+    overlay.querySelector('h2').textContent = '封印核、崩壊。YOU WIN.';
+    overlay.querySelectorAll('p')[0].textContent = '勝った。次は“もっと過激”にしていい。';
+    overlay.querySelectorAll('p')[1].textContent = 'Rで再開（最初から）。';
+    overlay.querySelector('.chars').style.display='none';
+    overlay.querySelector('.tipbar').style.display='none';
+  }else{
+    updateHUD();
+  }
+}
+
+function pick(c){
+  selectedChar = c;
+  overlay.style.display = 'none';
+  running = true;
+  paused = false;
+
+  // per char tuning
+  paddle.w = (c==='aria') ? 210 : 190;
+  restart(true);
+
+  // unlock audio on gesture (optional)
+  ensureAudio();
+}
+
+function togglePause(){
+  if(!selectedChar) return;
+  paused = !paused;
+  if(paused) blip(300,0.06,'sine',0.08);
+}
+
+function restart(keepChar=false){
+  score=0; life=3; combo=1; bossActive=false; bossHP=0;
+  setMode('NORMAL');
+
+  paddle.x = W/2; paddle.targetX = W/2;
+  resetBall();
+  initBricks();
+  updateHUD();
+
+  // restore overlay text if it was win state
+  overlay.querySelector('.chars').style.display='grid';
+  overlay.querySelector('.tipbar').style.display='flex';
+  overlay.querySelector('h2').textContent='キャラを選べ。封印（ブロック）をぶっ壊せ。';
+  overlay.querySelectorAll('p')[0].textContent='※「過激」は派手さ全振りの意味で実装。流血や露骨表現は無し。安心して破壊してOK。';
+  overlay.querySelectorAll('p')[1].textContent='左右移動：マウス/タッチ/←→　｜　開始：キャラをクリック　｜　一時停止：P　｜　リスタート：R';
+}
+
+canvas.addEventListener('pointerdown', e=>{
+  canvas.setPointerCapture?.(e.pointerId);
+  paddle.targetX = pointerToCanvasX(e.clientX);
+  // start audio on first interaction, and optionally toggle BGM when game starts
+  ensureAudio();
+});
+canvas.addEventListener('pointermove', e=>{
+  if(e.buttons===0 && e.pointerType==='mouse') {
+    paddle.targetX = pointerToCanvasX(e.clientX);
+    return;
+  }
+  paddle.targetX = pointerToCanvasX(e.clientX);
+});
+canvas.addEventListener('mousemove', e=>{
+  if(e.buttons===0) paddle.targetX = pointerToCanvasX(e.clientX);
+});
+
+window.addEventListener('keydown', e=>{
+  if(e.key==='p' || e.key==='P' || e.code==='Space'){ togglePause(); }
+  if(e.key==='r' || e.key==='R'){ restart(true); running=!!selectedChar; paused=false; overlay.style.display='none'; }
+  if(e.key==='m' || e.key==='M'){ toggleSFX(); }
+  if(e.key==='b' || e.key==='B'){ toggleBGM(); }
+  if(e.key==='ArrowLeft') paddle.targetX -= 26;
+  if(e.key==='ArrowRight') paddle.targetX += 26;
+});
+
+// Make pill clickable for quick toggle
+pillAudio.style.cursor='pointer';
+pillAudio.addEventListener('click', ()=>{
+  // single click toggles BGM, shift-click toggles SFX
+  if(window.event && window.event.shiftKey) toggleSFX();
+  else toggleBGM();
+});
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // stars
+  ctx.globalAlpha = 0.25;
+  for(let i=0;i<60;i++){
+    const x = (i*97)%W;
+    const y = (i*233 + (performance.now()*0.02))%H;
+    ctx.fillStyle = '#9fb6ff';
+    ctx.fillRect(x,y,1,1);
+  }
+  ctx.globalAlpha = 1;
+
+  // Bricks
+  for(const b of bricks){
+    if(!b.alive) continue;
+    const isShard = (b.hp>1);
+    ctx.fillStyle = b.star ? '#ffd36a' : isShard ? '#8a7cff' : '#3b4668';
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+    // highlight
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(b.x+6, b.y+4, b.w-12, 3);
+    ctx.globalAlpha = 1;
+
+    if(b.star){
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#fff';
+      ctx.fillText('★', b.x + b.w/2 - 5, b.y + b.h - 5);
+      ctx.globalAlpha = 1;
+    }
+    if(isShard){
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(b.x, b.y, b.w, 2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Boss block (after cleared)
+  if(bossActive){
+    const bw = W*0.64, bh = 20;
+    const bx = (W-bw)/2, by = BR.top-44;
+    // core color by char/mode
+    const c = (selectedChar==='desira') ? '#ff5151' : (selectedChar==='mirea') ? '#b07cff' : '#6ad1ff';
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = c;
+    ctx.fillRect(bx-10, by-10, bw+20, bh+20);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = c;
+    ctx.fillRect(bx, by, bw, bh);
+    // hp pips
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#0b0d16';
+    const pips = Math.min(20, bossHP);
+    for(let i=0;i<pips;i++){
+      const px = bx + 10 + i*(bw-20)/20;
+      ctx.fillRect(px, by+6, 6, bh-12);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Paddle glow
+  const glow = (selectedChar==='desira') ? '#ff5151' : (selectedChar==='mirea') ? '#b07cff' : '#6ad1ff';
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = glow;
+  ctx.fillRect(paddle.x - paddle.w/2 - 12, paddle.y - 14, paddle.w + 24, paddle.h + 28);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = glow;
+  ctx.fillRect(paddle.x - paddle.w/2, paddle.y, paddle.w, paddle.h);
+
+  // Ball
+  ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(ball.x,ball.y,6,0,Math.PI*2);
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
   ctx.fill();
 
+  // Controlled glitch (small slices near ball only)
+  if(glitchT>0){
+    const c = (selectedChar==='desira') ? '#ff2b2b' : (selectedChar==='mirea') ? '#b07cff' : '#6ad1ff';
+    ctx.save();
+    ctx.globalAlpha = 0.10 + 0.01*glitchT;
+    ctx.fillStyle = c;
+    const baseY = ball.y + rand(-70, 70);
+    for(let i=0;i<2;i++){
+      const y = clamp(baseY + rand(-25,25), 0, H-6);
+      const h = rand(3, 7);
+      const w = rand(80, 180);
+      const x = clamp(ball.x + rand(-120,120) - w/2, 0, W-w);
+      ctx.fillRect(x, y, w, h);
+    }
+    ctx.restore();
+  }
+
+  // Mode banner
+  if(mode!=='NORMAL'){
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = (mode==='RAGE') ? '#ff5151' : '#6ad1ff';
+    ctx.fillRect(0, 0, W, 14);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function step(){
+  // smooth paddle
+  paddle.x += (paddle.targetX - paddle.x) * 0.22;
+
+  if(running && !paused){
+    // decay glitch
+    glitchT = Math.max(0, glitchT - 0.35);
+
+    // move ball
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    // walls
+    if(ball.x < ball.r){ ball.x = ball.r; ball.vx *= -1; blip(520,0.04,'sine',0.07); }
+    if(ball.x > W-ball.r){ ball.x = W-ball.r; ball.vx *= -1; blip(520,0.04,'sine',0.07); }
+    if(ball.y < ball.r){ ball.y = ball.r; ball.vy *= -1; blip(620,0.04,'sine',0.06); }
+
+    // paddle collision
+    if(circleRectHit(ball.x, ball.y, ball.r, paddle.x - paddle.w/2, paddle.y, paddle.w, paddle.h)){
+      ball.y = paddle.y - ball.r - 0.5;
+      ball.vy = -Math.abs(ball.vy);
+
+      // angle based on hit position
+      const t = (ball.x - paddle.x) / (paddle.w/2);
+      const angle = t * 0.95;
+      const speed = Math.hypot(ball.vx, ball.vy);
+
+      ball.vx = speed * Math.sin(angle);
+      ball.vy = -speed * Math.cos(angle);
+
+      blip(340 + Math.abs(t)*120, 0.05, 'triangle', 0.07);
+
+      // Desira speed up (controlled)
+      if(selectedChar==='desira'){
+        const s = Math.min(1.30, 1 + (combo-1)*0.018);
+        ball.vx *= s; ball.vy *= s;
+        pushGlitch(2);
+      }
+    }
+
+    // bricks collision
+    for(const b of bricks){
+      if(!b.alive) continue;
+      if(circleRectHit(ball.x, ball.y, ball.r, b.x, b.y, b.w, b.h)){
+        // reflect
+        const cx = b.x + b.w/2, cy = b.y + b.h/2;
+        const dx = ball.x - cx, dy = ball.y - cy;
+        if(Math.abs(dx) > Math.abs(dy)) ball.vx *= -1;
+        else ball.vy *= -1;
+
+        // damage
+        b.hp -= 1;
+        if(b.hp<=0){ b.alive=false; onBrickBreak(b); }
+        else{
+          // shard hit
+          score += 15;
+          blip(760,0.05,'square',0.07);
+          pushGlitch(2);
+          updateHUD();
+        }
+
+        noiseHit(0.035, 0.08);
+        break;
+      }
+    }
+
+    // boss collision
+    if(!bossActive && allBricksCleared()){
+      spawnBoss();
+      pushGlitch(8);
+      blip(140,0.12,'sawtooth',0.10);
+    }
+    if(bossActive){
+      const bw = W*0.64, bh = 20;
+      const bx = (W-bw)/2, by = BR.top-44;
+      if(circleRectHit(ball.x, ball.y, ball.r, bx, by, bw, bh)){
+        ball.vy *= -1;
+        hitBoss();
+      }
+    }
+
+    // out of bounds
+    if(ball.y > H + 30){
+      life -= 1;
+      combo = 1;
+      setMode('NORMAL');
+      updateHUD();
+      blip(90,0.12,'sawtooth',0.10);
+      pushGlitch(6);
+
+      if(life<=0){
+        running=false;
+        overlay.style.display='flex';
+        overlay.querySelector('h2').textContent = '封印が勝った。YOU LOSE.';
+        overlay.querySelectorAll('p')[0].textContent = 'やり直し。Rで再挑戦。';
+        overlay.querySelectorAll('p')[1].textContent = '（BGM/SFXは右上 or B/Mで切替）';
+      }else{
+        resetBall();
+      }
+    }
+  }
+
+  draw();
   requestAnimationFrame(step);
 }
+
+// Boot
+updateHUD();
 step();
 </script>
 </body>
