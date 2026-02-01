@@ -357,14 +357,14 @@ function awakenOff(){
   bgmSetMode("normal");
 }
 
-function pick(c){
+function pick(c){ awakenReady=false; awakenWindow=false; awakenSeq=""; awakened=false; flash.style.opacity=0;
   selectedChar=c;
   hudChar.textContent=c.toUpperCase();
   overlay.style.display="none";
-flash.style.opacity=0; awakenWindow=false;
+flash.style.opacity = (selectedChar==='desira') ? 0; awakenWindow=false;
   running=true; paused=false;
   awakenOff();
-  awakenWindow=false; flash.style.opacity=0;
+  awakenWindow=false; flash.style.opacity = (selectedChar==='desira') ? 0;
   applyCharStats();
   resetAll();
   if(selectedChar==="desira"){ awakenReady=true; scheduleNextAwaken(performance.now()); } else { awakenReady=false; }
@@ -373,7 +373,7 @@ flash.style.opacity=0; awakenWindow=false;
 function backToSelect(){
   running=false; paused=false;
   overlay.style.display="flex";
-  flash.style.opacity=0; redFlash.style.opacity=0; glitch.style.opacity=0;
+  flash.style.opacity = (selectedChar==='desira') ? 0; redFlash.style.opacity=0; glitch.style.opacity=0;
   awakenWindow=false; awakened=false;
   bgmSetMode("normal");
 }
@@ -382,7 +382,7 @@ function togglePause(){ paused=!paused; }
 
 function restart(){
   if(!selectedChar) return;
-  awakenOff(); awakenWindow=false; flash.style.opacity=0;
+  awakenOff(); awakenWindow=false; flash.style.opacity = (selectedChar==='desira') ? 0;
   applyCharStats();
   resetAll();
   if(selectedChar==="desira"){ awakenReady=true; scheduleNextAwaken(performance.now()); } else { awakenReady=false; }
@@ -419,7 +419,7 @@ window.addEventListener('keydown', e=>{
     if(kk.length===1 && /[a-z0-9]/.test(kk)) {
       awakenSeq = (awakenSeq + kk).slice(-3);
       if(awakenSeq==="ds2") {
-        awakenWindow=false; flash.style.opacity=0;
+        awakenWindow=false; flash.style.opacity = (selectedChar==='desira') ? 0;
         awakenOn();
       }
     }
@@ -445,18 +445,18 @@ function update(t){
   paddle.x += (paddle.targetX - paddle.x)*0.30;
 
   // Awakening scheduling
-  if(awakenReady && selectedChar==="desira" && !awakened){
+  if(selectedChar==="desira" && awakenReady && !awakened){
     if(!nextAwakenAt) scheduleNextAwaken(t);
     if(!awakenWindow && t > nextAwakenAt && (score>=60 || combo>=3)) {
       startAwakenWindow(t);
       scheduleNextAwaken(t);
     }
     if(awakenWindow){
-      flash.style.opacity = Math.abs(Math.sin(t*0.012));
-      if(t>awakenUntil){ awakenWindow=false; flash.style.opacity=0; }
+      flash.style.opacity = (selectedChar==='desira') ? Math.abs(Math.sin(t*0.012));
+      if(t>awakenUntil){ awakenWindow=false; flash.style.opacity = (selectedChar==='desira') ? 0; }
     }
   } else {
-    awakenWindow=false; flash.style.opacity=0;
+    awakenWindow=false; flash.style.opacity = (selectedChar==='desira') ? 0;
   }
 
   // Awakening effects
