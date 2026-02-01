@@ -331,6 +331,7 @@ function resetAll(){
 
 // --- Awakening ---
 let awakenWindow=false, awakenUntil=0, awakenSeq="", awakened=false;
+let awakenReady=false; // Desira-only gate
 let nextAwakenAt=0;
 
 function scheduleNextAwaken(now){ nextAwakenAt = now + 9000 + Math.random()*8000; }
@@ -360,12 +361,13 @@ function pick(c){
   selectedChar=c;
   hudChar.textContent=c.toUpperCase();
   overlay.style.display="none";
+flash.style.opacity=0; awakenWindow=false;
   running=true; paused=false;
   awakenOff();
   awakenWindow=false; flash.style.opacity=0;
   applyCharStats();
   resetAll();
-  scheduleNextAwaken(performance.now());
+  if(selectedChar==="desira"){ awakenReady=true; scheduleNextAwaken(performance.now()); } else { awakenReady=false; }
 }
 
 function backToSelect(){
@@ -383,7 +385,7 @@ function restart(){
   awakenOff(); awakenWindow=false; flash.style.opacity=0;
   applyCharStats();
   resetAll();
-  scheduleNextAwaken(performance.now());
+  if(selectedChar==="desira"){ awakenReady=true; scheduleNextAwaken(performance.now()); } else { awakenReady=false; }
 }
 
 window.pick=pick; window.backToSelect=backToSelect; window.togglePause=togglePause; window.restart=restart;
@@ -443,7 +445,7 @@ function update(t){
   paddle.x += (paddle.targetX - paddle.x)*0.30;
 
   // Awakening scheduling
-  if(selectedChar==="desira" && !awakened){
+  if(awakenReady && selectedChar==="desira" && !awakened){
     if(!nextAwakenAt) scheduleNextAwaken(t);
     if(!awakenWindow && t > nextAwakenAt && (score>=60 || combo>=3)) {
       startAwakenWindow(t);
