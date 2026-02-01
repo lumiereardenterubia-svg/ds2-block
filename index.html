@@ -33,8 +33,8 @@
   .hud .k{color:var(--muted); font-size:11px;}
   .hud .v{font-size:14px; font-weight:800; letter-spacing:.02em;}
   .centerOverlay.isHidden{display:none; pointer-events:none;}
-  .centerOverlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
-  .modal{width:min(760px, 92%); background:linear-gradient(180deg,#0e1020ee,#070812ee); border:1px solid #2a2f45; border-radius:16px; box-shadow:0 20px 70px rgba(0,0,0,.55); padding:14px;}
+  .centerOverlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:auto; z-index:50;}
+  .modal{pointer-events:auto; width:min(760px, 92%); background:linear-gradient(180deg,#0e1020ee,#070812ee); border:1px solid #2a2f45; border-radius:16px; box-shadow:0 20px 70px rgba(0,0,0,.55); padding:14px;}
   .modal h1{margin:0 0 6px; font-size:18px; letter-spacing:.04em;}
   .modal p{margin:6px 0; color:var(--muted); line-height:1.45;}
   .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px;}
@@ -421,22 +421,22 @@
     startRun();
   }
 
-  // ====== Character Select ======
-  document.querySelectorAll('.char').forEach(el=> {
-    el.addEventListener('click', ()=> {
-      selectedChar = el.dataset.char;
-      // restore modal layout (in case coming from pause)
-      overlay.classList.add('isHidden');
-      modal.querySelectorAll('p').forEach(p=> p.style.display = 'block');
-      modal.querySelector('.grid').style.display = 'grid';
-      modal.querySelector('.tip').style.display = 'flex';
 
-      // Reset and show hud name
-      resetGame();
-      hudChar.textContent = (selectedChar==='aria'?'ARIA':selectedChar==='desira'?'DESIRA':'MIREA');
-      // Immediately start on select for snappy feel
-      startRun();
-    });
+  // ====== Character Select ======
+  // Robust: event delegation (works even if individual listeners fail)
+  overlay.addEventListener('click', (e)=> {
+    const card = e.target.closest && e.target.closest('.char');
+    if(!card) return;
+    selectedChar = card.dataset.char;
+
+    // Restore modal layout (in case coming from pause)
+    modal.querySelectorAll('p').forEach(p=> p.style.display = 'block');
+    modal.querySelector('.grid').style.display = 'grid';
+    modal.querySelector('.tip').style.display = 'flex';
+
+    resetGame();
+    hudChar.textContent = (selectedChar==='aria'?'ARIA':selectedChar==='desira'?'DESIRA':'MIREA');
+    startRun();
   });
 
   // ====== Collision ======
